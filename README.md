@@ -12,6 +12,13 @@ starbot自定义命令包，包含如下功能
 
 当前版本 v1.1.0
 
+starbot-mysql-plugin配套mysql工具脚本：
+
+1. mysql_init.py为数据库初始化工具，可以使用python mysql_init.py -h查询使用帮助
+2. mysql_trans_qq.py为数据库迁移工具，可以使用python mysql_trans_qq.py -h查询使用帮助
+3. mysql_backup.py为数据库备份和恢复工具，可以使用python mysql_backup.py -h查询使用帮助
+
+
 更新日志查阅[更新日志](./UPDATE_LOG.md)
 
 #### 软件架构
@@ -42,10 +49,6 @@ starbot自定义命令包，包含如下功能
 插件需要用户自行部署mysql服务，mysql默认数据库为starbot，表结构已生成sql文件starbot.sql
 
 注意：starbot自身逻辑不接受空mysql表启动，即订阅信息为空的状态无法启动starbot，因此需要先进行订阅信息的写入才能正常启动
-
-mysql_init.py为数据库初始化工具，可以使用python mysql_init.py -h查询使用帮助
-
-mysql_trans_qq.py为数据库迁移工具，可以使用python mysql_trans_qq.py -h查询使用帮助
 
 具体参阅[详细示例](./EXAMPLE.md)
 
