@@ -83,6 +83,41 @@ CREATE TABLE `targets`  (
 SET FOREIGN_KEY_CHECKS = 1;
 """
 
+
+async def check_db_connection(db_config: dict):
+    """
+    检查数据库连接是否有效
+    :param db_config: 数据库连接配置字典
+    :return: 是否成功
+    """
+    try:
+        # 尝试建立连接
+        conn = await aiomysql.connect(
+            host=db_config["host"],
+            port=db_config["port"],
+            user=db_config["user"],
+            password=db_config["password"],
+            connect_timeout=5  # 设置连接超时时间（秒）
+        )
+
+        conn.close()
+        return True
+
+    except aiomysql.OperationalError as e:
+        error_msg = f"连接失败: {e}"
+        # 常见错误类型细分提示
+        if "Access denied" in str(e):
+            error_msg = "用户名或密码错误，请检查连接配置"
+        elif "Can't connect to MySQL server" in str(e):
+            error_msg = "无法连接到数据库服务器，请检查主机/端口或网络"
+        logger.error(error_msg)
+        return False
+
+    except Exception:
+        logger.exception("未知错误\n")
+        return False
+
+
 async def create_database(db_config):
     """创建数据库"""
     conn = await aiomysql.connect(
@@ -128,7 +163,8 @@ async def execute_sql(db_config, starbot_sql):
                     logger.debug(f"Executed: {stmt[:50]}...")  # 显示前50个字符
                 except aiomysql.Error as e:
                     logger.error(f"Error executing statement: {e}\nStatement: {stmt}")
-                    raise
+                    await conn.rollback()  # 回滚当前事务
+                    break
             await conn.commit()
     except Exception as e:
         logger.error(f"Error executing SQL file: {e}")
@@ -136,42 +172,43 @@ async def execute_sql(db_config, starbot_sql):
         conn.close()
 
 
-
-async def main(args):
+async def main(input_args):
     db_config = {
-        "host": f"{args.host}",
-        "port": args.port,
-        "user": f"{args.user}",
-        "password": f"{args.password}",
-        "db": f"{args.database}",
-        "autocommit": True
+        "host": f"{input_args.host}",
+        "port": input_args.port,
+        "user": f"{input_args.user}",
+        "password": f"{input_args.password}",
+        "db": f"{input_args.database}"
     }
     insert_sql = f"""
-    INSERT INTO `bot` VALUES (1, {args.qq}, 180864557);
+    INSERT INTO `bot` VALUES (1, {input_args.qq}, 180864557);
     INSERT INTO `dynamic_update` VALUES ('00000000-0000-0000-0000-000000000000', 180864557, 0, '冷月丶残星丶发送了动态');
     INSERT INTO `live_off` VALUES ('00000000-0000-0000-0000-000000000000', 180864557, 0, '冷月丶残星丶直播结束了');
     INSERT INTO `live_on` VALUES ('00000000-0000-0000-0000-000000000000', 180864557, 0, '冷月丶残星丶正在直播');
     INSERT INTO `live_report` VALUES ('00000000-0000-0000-0000-000000000000', 180864557, 0, '', '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     INSERT INTO `targets` VALUES ('00000000-0000-0000-0000-000000000000', 180864557, 799915082, 0000000001, '冷月丶残星丶', 7260744);
     """
-    if not args.onlystruct and args.qq == 0:
+    if not input_args.onlystruct and input_args.qq == 0:
         logger.warning("需要QQ号，请添加--qq参数指定qq号，例如--qq 123456789")
-        exit()
-    logger.info(f"若不存在数据库 {args.database} 则创建...")
+        return
+    db_check_result = await check_db_connection(db_config)
+    if not db_check_result:
+        logger.error(f"数据库连接失败")
+        return
+    logger.info(f"数据库连接成功")
+    logger.info(f"若不存在数据库 {input_args.database} 则创建...")
     await create_database(db_config)
     logger.info(f"开始表结构初始化...")
     await execute_sql(db_config, starbot_sql)
-    if not args.onlystruct:
+    if not input_args.onlystruct:
         logger.info(f"写入占位数据...")
         await execute_sql(db_config, insert_sql)
     else:
         logger.info(f"添加了--onlystruct标记，跳过写入占位数据")
-    if args.onlystruct:
+    if input_args.onlystruct:
         logger.success("^_^数据库初始化已完成，当前mysql订阅源为空")
     else:
-        logger.success(f"^_^数据库初始化已完成，已基于botqq号{args.qq}写入一条占位数据")
-
-    exit()
+        logger.success(f"^_^数据库初始化已完成，已基于botqq号{input_args.qq}写入一条占位数据")
 
 
 if __name__ == "__main__":
@@ -194,4 +231,5 @@ if __name__ == "__main__":
 
     # 解析参数并运行
     args = parser.parse_args()
-    asyncio.run(main(args))
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(main(args))

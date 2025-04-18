@@ -1,4 +1,4 @@
-# starbot-mysql-plugins
+# starbot-mysql-plugin
 
 #### 部分命令示例
 

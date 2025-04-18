@@ -1,4 +1,4 @@
-# starbot-mysql-plugins
+# starbot-mysql-plugin
 ![1f36b87beb59d8b49881204b497ee87b](https://github.com/user-attachments/assets/580c0838-45b7-4cba-9217-1a61ef77ab47)
 #### 介绍
 
