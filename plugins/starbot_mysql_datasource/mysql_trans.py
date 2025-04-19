@@ -1,3 +1,6 @@
+import json
+import os
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
 from graia.ariadne import Ariadne
@@ -183,3 +186,21 @@ async def datasource_trans_to_mysql():
                 await obj_mysql.trans_targets(bot.qq, up.uid, target.id, target_dict)
                 await obj_mysql.trans_save()
     return True, ""
+
+
+def datasource_trans_to_json():
+    datasource = Ariadne.options["StarBotDataSource"]
+
+    json_file = f"推送配置_{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
+
+    try:
+        with open(json_file, "w", encoding="utf-8") as f:
+            bot_list_json = []
+            for bot in datasource.bots:
+                bot_list_json.append(bot.json(ensure_ascii=False))
+            f.write("[" + ",".join(bot_list_json) + "]")
+    except Exception as ex:
+        if os.path.exists(json_file):
+            os.remove(json_file)
+        return False, f"发生错误： {ex}"
+    return True, json_file

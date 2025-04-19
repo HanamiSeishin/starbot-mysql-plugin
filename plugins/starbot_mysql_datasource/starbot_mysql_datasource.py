@@ -22,7 +22,7 @@ from starbot.core.model import PushType
 from .mysql_utils import ObjMysql, check_not_mysql_datasource, check_mysql_datasource, create_auto_follow_task, \
     draw_image_pic, draw_pic, check_at_object, get_message_help, select_uname_and_room_id, get_logger_prefix, \
     default_help, check_bot_mode_public, set_bot_mode_private, set_bot_mode_public
-from .mysql_trans import datasource_trans_to_mysql
+from .mysql_trans import datasource_trans_to_mysql, datasource_trans_to_json
 
 prefix = config.get("COMMAND_PREFIX")
 master_qq = config.get("MASTER_QQ")
@@ -42,6 +42,7 @@ quit_group = ["退出群聊", "退群", "quit"]
 check_describe_abnormal = ["检测异常订阅", "checkabnormal"]
 clear_describe_abnormal = ["清除异常订阅", "clearabnormal"]
 trans_to_mysql = ["数据源转储", "datasourcetrans"]
+save_json = ["数据源转存json"]
 ping = ["ping"]
 bot_mode = ["模式", "mode"]
 
@@ -219,12 +220,18 @@ describe_cmd = {
                            "该命令可在其他数据源下使用，用处是将内存中的订阅信息插入mysql数据库中",
                            f"示例: {prefix}{trans_to_mysql[0]}"]
     },
+    save_json[0]: {
+        "cmd": save_json,
+        "describe_group": [],
+        "describe_friend": [],
+        "describe_admin": [f"{prefix}[{' | '.join(save_json)}]" if len(save_json) > 1 else f"{prefix}{save_json[0]}",
+                           "该命令在mysql数据源下使用，用处是将内存中的订阅信息转存为json数据源文件",
+                           f"示例: {prefix}{save_json[0]}"]
+    },
     ping[0]: {
         "cmd": ping,
         "describe_group": [],
-        "describe_friend": [f"{prefix}[{' | '.join(ping)}]" if len(ping) > 1 else f"{prefix}{ping[0]}",
-                            "回复 pong",
-                            f"示例: {prefix}{ping[0]}"],
+        "describe_friend": [],
         "describe_admin": [f"{prefix}[{' | '.join(ping)}]" if len(ping) > 1 else f"{prefix}{ping[0]}",
                            "回复 pong",
                            f"示例: {prefix}{ping[0]}"]
@@ -478,9 +485,41 @@ async def _TransToMysql(app: Ariadne, sender: Friend, cmd: MessageChain = Result
     await app.send_message(sender, MessageChain(draw_pic(f"{cmd.display} 正在执行...", width=800)))
     result, message = await datasource_trans_to_mysql()
     if not result:
+        logger.info(f"{logger_prefix} 失败，原因：{message}")
         await app.send_message(sender, MessageChain(draw_pic(f"{cmd.display} 失败，原因：{message}")))
         return
+    logger.info(f"{logger_prefix} 成功")
     await app.send_message(sender, MessageChain(draw_pic(f"{cmd.display} 成功", width=800)))
+
+
+@channel.use(
+    ListenerSchema(
+        listening_events=[FriendMessage],
+        inline_dispatchers=[Twilight(
+            ElementMatch(At, optional=True),
+            FullMatch(prefix),
+            "cmd" @ UnionMatch(*save_json)
+        )],
+    )
+)
+async def _TransToJson(app: Ariadne, sender: Friend, cmd: MessageChain = ResultValue()):
+    if check_not_mysql_datasource():
+        return
+    if master_qq == "" or master_qq != sender.id:
+        # 功能需要配置MASTER_QQ
+        return
+    logger_prefix = get_logger_prefix(cmd.display, sender)
+    logger.info(f"{logger_prefix}")
+    await app.send_message(sender, MessageChain(draw_pic(f"{cmd.display} 正在执行...", width=800)))
+    result, message = datasource_trans_to_json()
+    if not result:
+        logger.info(f"{logger_prefix} 失败，原因：{message}")
+        await app.send_message(sender, MessageChain(draw_pic(f"{cmd.display} 失败，原因：{message}")))
+        return
+    logger.info(f"{logger_prefix} 成功")
+    await app.send_message(sender, MessageChain(draw_pic([f"{cmd.display} 成功",
+                                                          f"文件保存在main.py同级目录下",
+                                                          f"文件名：{message}"])))
 
 
 @channel.use(
@@ -1387,6 +1426,8 @@ async def _MysqlHelp(app: Ariadne, sender: Union[Friend, Group], message: Messag
     )
 )
 async def _Ping(app: Ariadne, sender: Friend, cmd: MessageChain = ResultValue()):
+    if master_qq == "" or master_qq != sender.id:
+        return
     logger_prefix = get_logger_prefix(cmd.display, sender)
     logger.info(f"{logger_prefix}")
     await app.send_message(sender, MessageChain("pong"))

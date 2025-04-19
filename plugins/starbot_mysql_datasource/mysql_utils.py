@@ -21,7 +21,7 @@ from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.0"
+_version = "v1.1.1"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -51,7 +51,7 @@ def check_mysql_datasource():
     return False
 
 
-def get_logger_prefix(cmd, sender, member: Optional[Member] = None):
+def get_logger_prefix(cmd: object, sender: object, member: Optional[Member] = None) -> object:
     if isinstance(sender, Group):
         if member is None:
             return f"群[{sender.name}]({sender.id}) 命令({cmd})"
