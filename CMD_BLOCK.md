@@ -5,15 +5,17 @@
 命令阻断工具本质也是一个插件包，如需启用，可以仅保留需要的命令阻断文件，将commands_block文件夹放置于plugins目录中随starbot启动载入即可
 
 例如，我不允许其他用户触发绑定、禁用、启用、直播报告，则保留如下文件夹及文件
+```
 commands_block
   -|disable_block.py
   -|enable_block.py
   -|data
      -|bind_block.py
      -|report_block.py
-
+```
 将这个commands_block文件夹放入plugins目录中，按照文档加载该自定义插件，即可启用这部分命令阻断，配置master_qq后非master_qq用户则不会响应这部分命令
- _[将这些.py文件随手扔在plugins根目录下也是可以正常加载]_ 
+ 
+_[将这些.py文件随手扔在plugins根目录下也是可以正常加载]_ 
 
 命令和对应文件的关系如下表所示
 
