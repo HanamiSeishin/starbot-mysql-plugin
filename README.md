@@ -18,6 +18,8 @@ starbot-mysql-plugin配套mysql工具脚本：
 2. mysql_trans_qq.py为数据库迁移工具，可以使用python mysql_trans_qq.py -h查询使用帮助
 3. mysql_backup.py为数据库备份和恢复工具，可以使用python mysql_backup.py -h查询使用帮助
 
+另外为各位小伙伴提供了默认命令阻断工具，可阻止bot响应除master_qq用户外的用户（需要配置MASTER_QQ）
+每个命令单独配置，可以按需取用，详细见[命令阻断工具说明](./CMD_BLOCK.md)
 
 更新日志查阅[更新日志](./UPDATE_LOG.md)
 

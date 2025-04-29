@@ -27,7 +27,7 @@ def import_modules(path, current_package):
     for sub_name in folder_names:
         if sub_name.startswith("_"):
             continue
-        import_modules(os.path.join(folder_path, sub_name), f"{current_package}.{sub_name}")
+        import_modules(os.path.join(path, sub_name), f"{current_package}.{sub_name}")
 
 
 import_modules(folder_path, __package__)

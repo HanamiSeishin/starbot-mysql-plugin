@@ -109,30 +109,30 @@ logo绘图函数：mysql_utils.py -> draw_image_pic
 
 根据推送姬官网的json生成工具字段设置推送报告具体内容，详细配置如下
 
-| 配置项       | 别名  | 类型   | 可选值  |
-|--------------|-----|---------|---------|
-| 直播时长     | time | bool  | 开启 关闭  |
-| 粉丝变动     | fans_change | bool  | 开启 关闭  |
-| 粉丝勋章变动     | fans_medal_change | bool  | 开启 关闭  |
-| 大航海变动     | guard_change | bool  | 开启 关闭  |
-| 弹幕数据     | danmu | bool  | 开启 关闭  |
-| 盲盒数据     | box | bool  | 开启 关闭  |
-| 礼物数据     | gift | bool  | 开启 关闭  |
-| sc数据     | sc | bool  | 开启 关闭  |
-| 大航海数据     | guard | bool  | 开启 关闭  |
-| 弹幕榜     | danmu_ranking | int  | 闭区间0到10  |
-| 盲盒榜     | box_ranking | int  | 闭区间0到10  |
-| 盲盒盈亏榜     | box_profit_ranking | int  | 闭区间0到10  |
-| 礼物榜     | gift_ranking | int  | 闭区间0到10  |
-| sc榜     | sc_ranking | int  | 闭区间0到10  |
-| 开通大航海名单     | guard_list | bool  | 开启 关闭  |
-| 盲盒盈亏折线图     | box_profit_diagram | bool  | 开启 关闭  |
-| 弹幕互动曲线图     | danmu_diagram | bool  | 开启 关闭  |
-| 盲盒互动曲线图     | box_diagram | bool  | 开启 关闭  |
-| 礼物互动曲线图     | gift_diagram | bool  | 开启 关闭  |
-| sc互动曲线图     | sc_diagram | bool  | 开启 关闭  |
-| 大航海互动曲线图     | guard_diagram | bool  | 开启 关闭  |
-| 弹幕词云     | danmu_cloud | bool  | 开启 关闭  |
+| 配置项      | 别名                 | 类型   | 可选值     |
+|----------|--------------------|------|---------|
+| 直播时长     | time               | bool | 开启 关闭   |
+| 粉丝变动     | fans_change        | bool | 开启 关闭   |
+| 粉丝勋章变动   | fans_medal_change  | bool | 开启 关闭   |
+| 大航海变动    | guard_change       | bool | 开启 关闭   |
+| 弹幕数据     | danmu              | bool | 开启 关闭   |
+| 盲盒数据     | box                | bool | 开启 关闭   |
+| 礼物数据     | gift               | bool | 开启 关闭   |
+| sc数据     | sc                 | bool | 开启 关闭   |
+| 大航海数据    | guard              | bool | 开启 关闭   |
+| 弹幕榜      | danmu_ranking      | int  | 闭区间0到10 |
+| 盲盒榜      | box_ranking        | int  | 闭区间0到10 |
+| 盲盒盈亏榜    | box_profit_ranking | int  | 闭区间0到10 |
+| 礼物榜      | gift_ranking       | int  | 闭区间0到10 |
+| sc榜      | sc_ranking         | int  | 闭区间0到10 |
+| 开通大航海名单  | guard_list         | bool | 开启 关闭   |
+| 盲盒盈亏折线图  | box_profit_diagram | bool | 开启 关闭   |
+| 弹幕互动曲线图  | danmu_diagram      | bool | 开启 关闭   |
+| 盲盒互动曲线图  | box_diagram        | bool | 开启 关闭   |
+| 礼物互动曲线图  | gift_diagram       | bool | 开启 关闭   |
+| sc互动曲线图  | sc_diagram         | bool | 开启 关闭   |
+| 大航海互动曲线图 | guard_diagram      | bool | 开启 关闭   |
+| 弹幕词云     | danmu_cloud        | bool | 开启 关闭   |
 
 
 #### 数据库初始化工具使用帮助
