@@ -367,7 +367,7 @@ async def element_get_bytes(image: Image):
         raise ValueError("you should offer a url.")
     session = get_session()
     try:
-        async with session.get(image.url) as response:
+        async with session.get(image.url, ssl=False) as response:
             response.raise_for_status()
             data = await response.read()
             image.base64 = base64.b64encode(data).decode("ascii")
