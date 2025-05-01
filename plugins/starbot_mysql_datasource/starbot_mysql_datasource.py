@@ -21,7 +21,7 @@ from starbot.core.model import PushType
 
 from .mysql_utils import ObjMysql, check_not_mysql_datasource, check_mysql_datasource, create_auto_follow_task, \
     draw_image_pic, draw_pic, check_at_object, get_message_help, select_uname_and_room_id, get_logger_prefix, \
-    default_help, check_bot_mode_public, set_bot_mode_private, set_bot_mode_public
+    default_help, check_bot_mode_public, set_bot_mode_private, set_bot_mode_public, element_get_bytes
 from .mysql_trans import datasource_trans_to_mysql, datasource_trans_to_json
 
 prefix = config.get("COMMAND_PREFIX")
@@ -723,7 +723,7 @@ async def _SetLogoGroup(app: Ariadne, sender: Group, member: Member, message: Me
             await app.send_message(sender, MessageChain(result))
             return
         await obj_mysql.init_target(bot, uid, group)
-        logo_base64 = base64.b64encode(await image.get_bytes()).decode('ascii')
+        logo_base64 = base64.b64encode(await element_get_bytes(image)).decode('ascii')
         obj_mysql.set_report_logo(logo_base64)
         await obj_mysql.save()
         uname, _ = obj_mysql.get_target_uname_and_roomid()
@@ -808,7 +808,7 @@ async def _SetLogoFriend(app: Ariadne, sender: Friend, cmd: MessageChain = Resul
             await app.send_message(sender, MessageChain(result))
             return
         await obj_mysql.init_target(bot, uid, source, source_type)
-        logo_base64 = base64.b64encode(await image.get_bytes()).decode('ascii')
+        logo_base64 = base64.b64encode(await element_get_bytes(image)).decode('ascii')
         obj_mysql.set_report_logo(logo_base64)
         await obj_mysql.save()
         uname, _ = obj_mysql.get_target_uname_and_roomid()
@@ -981,7 +981,7 @@ async def _SetMessageGroup(app: Ariadne, sender: Group, member: Member, message:
         msg = ""
         for element in ret_msg.content:
             if isinstance(element, Image):
-                msg += "{base64pic=" + base64.b64encode(await element.get_bytes()).decode('ascii') + "}"
+                msg += "{base64pic=" + base64.b64encode(await element_get_bytes(element)).decode('ascii') + "}"
             if isinstance(element, At):
                 msg += "{at" + f"{element.target}" + "}"
             if isinstance(element, AtAll):
@@ -1066,7 +1066,7 @@ async def _SetMessageFriend(app: Ariadne, sender: Friend, cmd: MessageChain = Re
         msg = ""
         for element in ret_msg.content:
             if isinstance(element, Image):
-                msg += "{base64pic=" + base64.b64encode(await element.get_bytes()).decode('ascii') + "}"
+                msg += "{base64pic=" + base64.b64encode(await element_get_bytes(element)).decode('ascii') + "}"
             if isinstance(element, Plain):
                 msg += element.text
         await obj_mysql.init_target(bot, uid, group)

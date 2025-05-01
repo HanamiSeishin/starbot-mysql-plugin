@@ -14,14 +14,14 @@ from starbot.core.user import User, RelationType
 from starbot.core.room import Up
 from starbot.core.model import PushType
 from starbot.utils import config, redis
-from starbot.utils.network import request
+from starbot.utils.network import request, get_session
 from starbot.utils.utils import get_credential
 from starbot.exception import ResponseCodeException, DataSourceException
 from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.1"
+_version = "v1.1.2"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -359,6 +359,21 @@ async def check_bot_mode_public(qq_num: int) -> bool:
         return False
     return True
 
+
+async def element_get_bytes(image: Image):
+    if image.base64:
+        return base64.b64decode(image.base64)
+    if not image.url:
+        raise ValueError("you should offer a url.")
+    session = get_session()
+    try:
+        async with session.get(image.url) as response:
+            response.raise_for_status()
+            data = await response.read()
+            image.base64 = base64.b64encode(data).decode("ascii")
+            return data
+    except Exception:
+        logger.exception("获取image元素base64失败")
 
 class BotMysql:
     id: int = 0

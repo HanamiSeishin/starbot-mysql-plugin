@@ -10,7 +10,7 @@ starbot自定义命令包，包含如下功能
 4. mysql数据源下的机器人的动态订阅功能和当前内存数据源到mysql的转储能力（需要配置MASTER_QQ）
 5. 覆盖starbot原始帮助
 
-当前版本 v1.1.1
+当前版本 v1.1.2
 
 starbot-mysql-plugin配套mysql工具脚本：
 

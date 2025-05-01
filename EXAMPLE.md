@@ -171,6 +171,33 @@ python mysql_init.py --password root123456 --qq 123456789
 python mysql_init.py --password root123456 --onlystruct
 ```
 
+注意，由于v1.1.2版本修复了字段使用text而未使用longtext导致无法存入图片base64，请使用mysql_repair.py工具将对应字段修复为longtext：
+执行命令
+```shell
+python mysql_repair.py --help
+```
+得到如下帮助文档
+```shell                    
+usage: mysql_repair.py [-h] [--host HOST] [--user USER] [--password PASSWORD] [--port PORT] [--database DATABASE]
+
+starbot_mysql_plugin数据库结构修复工具，用于修复表结构部分字段长度过短的问题
+
+options:
+  -h, --help           show this help message and exit
+  --host HOST          mysql host[默认127.0.0.1]
+  --user USER          mysql username[默认root]
+  --password PASSWORD  mysql password[默认123456]
+  --port PORT          mysql port[默认3306]
+  --database DATABASE  mysql db[默认starbot]
+```
+
+假设mysql用户名为root密码为root123456，为本地部署的mysql
+```shell
+python mysql_repair.py --host root --password root123456
+```
+待执行成功即可
+
+
 #### 数据库迁移工具使用帮助
 
 执行命令
