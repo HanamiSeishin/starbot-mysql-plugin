@@ -366,12 +366,10 @@ async def element_get_bytes(image: Image):
     if not image.url:
         raise ValueError("you should offer a url.")
     response = await get_session().get(image.url)
-    logger.info(f"\n{response = }")
     response.raise_for_status()
     image_data = await response.read()
     image_base64 = base64.b64encode(image_data).decode("ascii")
     image.base64 = image_base64
-    logger.info(f"\n{image_base64[:50] = }")
     return image_base64
 
 
