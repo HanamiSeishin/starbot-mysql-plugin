@@ -365,15 +365,15 @@ async def element_get_bytes(image: Image):
         return base64.b64decode(image.base64)
     if not image.url:
         raise ValueError("you should offer a url.")
-    session = get_session()
-    try:
-        async with session.get(image.url, ssl=False) as response:
-            response.raise_for_status()
-            data = await response.read()
-            image.base64 = base64.b64encode(data).decode("ascii")
-            return data
-    except Exception:
-        logger.exception("获取image元素base64失败")
+    response = await get_session().get(image.url)
+    logger.info(f"\n{response = }")
+    response.raise_for_status()
+    image_data = await response.read()
+    image_base64 = base64.b64encode(image_data).decode("ascii")
+    image.base64 = image_base64
+    logger.info(f"\n{image_base64[:50] = }")
+    return image_base64
+
 
 class BotMysql:
     id: int = 0
@@ -1092,6 +1092,7 @@ class ObjMysql:
         return self.target.get_uname_and_room_id()
 
     def set_message_inner(self, message_type: str, message: str = ""):
+        message = message.replace('\\', '\\\\')
         if message_type == "news":
             self.dynamic.set_message(message)
             return

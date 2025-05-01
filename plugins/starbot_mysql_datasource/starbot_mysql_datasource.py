@@ -723,8 +723,7 @@ async def _SetLogoGroup(app: Ariadne, sender: Group, member: Member, message: Me
             await app.send_message(sender, MessageChain(result))
             return
         await obj_mysql.init_target(bot, uid, group)
-        logo_base64 = base64.b64encode(await element_get_bytes(image)).decode('ascii')
-        obj_mysql.set_report_logo(logo_base64)
+        obj_mysql.set_report_logo(await element_get_bytes(image))
         await obj_mysql.save()
         uname, _ = obj_mysql.get_target_uname_and_roomid()
         logger.info(f"{logger_prefix} 成功 {uname}({uid})")
@@ -808,8 +807,7 @@ async def _SetLogoFriend(app: Ariadne, sender: Friend, cmd: MessageChain = Resul
             await app.send_message(sender, MessageChain(result))
             return
         await obj_mysql.init_target(bot, uid, source, source_type)
-        logo_base64 = base64.b64encode(await element_get_bytes(image)).decode('ascii')
-        obj_mysql.set_report_logo(logo_base64)
+        obj_mysql.set_report_logo(await element_get_bytes(image))
         await obj_mysql.save()
         uname, _ = obj_mysql.get_target_uname_and_roomid()
         logger.info(f"{logger_prefix} 成功 {msg_prefix}[{uname}]({uid})")
@@ -981,7 +979,7 @@ async def _SetMessageGroup(app: Ariadne, sender: Group, member: Member, message:
         msg = ""
         for element in ret_msg.content:
             if isinstance(element, Image):
-                msg += "{base64pic=" + base64.b64encode(await element_get_bytes(element)).decode('ascii') + "}"
+                msg += "{base64pic=" + await element_get_bytes(element) + "}"
             if isinstance(element, At):
                 msg += "{at" + f"{element.target}" + "}"
             if isinstance(element, AtAll):
@@ -1066,7 +1064,7 @@ async def _SetMessageFriend(app: Ariadne, sender: Friend, cmd: MessageChain = Re
         msg = ""
         for element in ret_msg.content:
             if isinstance(element, Image):
-                msg += "{base64pic=" + base64.b64encode(await element_get_bytes(element)).decode('ascii') + "}"
+                msg += "{base64pic=" + await element_get_bytes(element) + "}"
             if isinstance(element, Plain):
                 msg += element.text
         await obj_mysql.init_target(bot, uid, group)
