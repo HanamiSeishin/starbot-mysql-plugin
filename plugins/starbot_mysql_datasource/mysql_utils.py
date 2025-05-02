@@ -4,6 +4,7 @@ import uuid
 from PIL import Image as PIL_Image
 from io import BytesIO
 import base64
+import ssl
 
 from graia.ariadne import Ariadne
 from graia.ariadne.message.chain import MessageChain
@@ -21,7 +22,7 @@ from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.2"
+_version = "v1.1.3"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -365,7 +366,16 @@ async def element_get_bytes(image: Image):
         return base64.b64decode(image.base64)
     if not image.url:
         raise ValueError("you should offer a url.")
-    response = await get_session().get(image.url)
+    # 针对multimedia.nt.qq.com.cn的ssl握手失败进行密码套件兼容
+    # 修改方案来自于https://github.com/LagrangeDev/Lagrange.Core/issues/315
+    ssl_context = ssl.create_default_context()
+    ssl_context.set_ciphers('DEFAULT')
+    ssl_context.options |= ssl.OP_NO_SSLv2
+    ssl_context.options |= ssl.OP_NO_SSLv3
+    ssl_context.options |= ssl.OP_NO_TLSv1
+    ssl_context.options |= ssl.OP_NO_TLSv1_1
+    ssl_context.options |= ssl.OP_NO_COMPRESSION
+    response = await get_session().get(image.url, ssl=ssl_context)
     response.raise_for_status()
     image_data = await response.read()
     image_base64 = base64.b64encode(image_data).decode("ascii")
