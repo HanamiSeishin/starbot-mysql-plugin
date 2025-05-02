@@ -723,7 +723,8 @@ async def _SetLogoGroup(app: Ariadne, sender: Group, member: Member, message: Me
             await app.send_message(sender, MessageChain(result))
             return
         await obj_mysql.init_target(bot, uid, group)
-        obj_mysql.set_report_logo(await element_get_bytes(image))
+        logo_base64 = await element_get_bytes(image)
+        obj_mysql.set_report_logo(logo_base64)
         await obj_mysql.save()
         uname, _ = obj_mysql.get_target_uname_and_roomid()
         logger.info(f"{logger_prefix} 成功 {uname}({uid})")
@@ -807,7 +808,8 @@ async def _SetLogoFriend(app: Ariadne, sender: Friend, cmd: MessageChain = Resul
             await app.send_message(sender, MessageChain(result))
             return
         await obj_mysql.init_target(bot, uid, source, source_type)
-        obj_mysql.set_report_logo(await element_get_bytes(image))
+        logo_base64 = await element_get_bytes(image)
+        obj_mysql.set_report_logo(logo_base64)
         await obj_mysql.save()
         uname, _ = obj_mysql.get_target_uname_and_roomid()
         logger.info(f"{logger_prefix} 成功 {msg_prefix}[{uname}]({uid})")
