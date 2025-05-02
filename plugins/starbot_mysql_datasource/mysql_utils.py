@@ -22,7 +22,7 @@ from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.3"
+_version = "v1.1.4"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -381,6 +381,35 @@ async def element_get_bytes(image: Image):
     image_base64 = base64.b64encode(image_data).decode("ascii")
     image.base64 = image_base64
     return image_base64
+
+
+def append_report_help(help_str):
+    help_str.append("详细配置项如下")
+    help_str.append("*配置项*             *可选值*")
+    help_str.append("直播时长             开启 关闭")
+    help_str.append("粉丝变动             开启 关闭")
+    help_str.append("粉丝勋章变动          开启 关闭")
+    help_str.append("大航海变动           开启 关闭")
+    help_str.append("弹幕数据             开启 关闭")
+    help_str.append("粉丝变动             开启 关闭")
+    help_str.append("盲盒数据             开启 关闭")
+    help_str.append("礼物数据             开启 关闭")
+    help_str.append("sc数据              开启 关闭")
+    help_str.append("大航海数据           开启 关闭")
+    help_str.append("弹幕榜                0到10")
+    help_str.append("盲盒榜                0到10")
+    help_str.append("盲盒盈亏榜             0到10")
+    help_str.append("礼物榜                0到10")
+    help_str.append("sc榜                 0到10")
+    help_str.append("开通大航海名单        开启 关闭")
+    help_str.append("盲盒盈亏折线图        开启 关闭")
+    help_str.append("弹幕互动曲线图        开启 关闭")
+    help_str.append("盲盒互动曲线图        开启 关闭")
+    help_str.append("礼物互动曲线图        开启 关闭")
+    help_str.append("sc互动曲线图         开启 关闭")
+    help_str.append("大航海互动曲线图      开启 关闭")
+    help_str.append("弹幕词云             开启 关闭")
+    return help_str
 
 
 class BotMysql:

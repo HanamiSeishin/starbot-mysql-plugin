@@ -6,7 +6,7 @@ from graia.ariadne.event.message import FriendMessage, GroupMessage
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import At, Image, AtAll, Plain
 from graia.ariadne.message.parser.twilight import Twilight, FullMatch, UnionMatch, ElementMatch, ArgumentMatch, \
-    ResultValue, ParamMatch, SpacePolicy
+    ResultValue, ParamMatch, SpacePolicy, WildcardMatch
 from graia.ariadne.model import Friend, Group, Member, MemberPerm
 from graia.broadcast import PropagationCancelled
 from graia.saya import Channel
@@ -14,14 +14,14 @@ from graia.saya.builtins.broadcast import ListenerSchema
 from graia.broadcast.interrupt import InterruptControl
 from graia.broadcast.interrupt.waiter import Waiter
 from loguru import logger
-import base64
 
 from starbot.utils import config
 from starbot.core.model import PushType
 
 from .mysql_utils import ObjMysql, check_not_mysql_datasource, check_mysql_datasource, create_auto_follow_task, \
     draw_image_pic, draw_pic, check_at_object, get_message_help, select_uname_and_room_id, get_logger_prefix, \
-    default_help, check_bot_mode_public, set_bot_mode_private, set_bot_mode_public, element_get_bytes
+    default_help, check_bot_mode_public, set_bot_mode_private, set_bot_mode_public, element_get_bytes, \
+    append_report_help
 from .mysql_trans import datasource_trans_to_mysql, datasource_trans_to_json
 
 prefix = config.get("COMMAND_PREFIX")
@@ -37,7 +37,7 @@ reload_uid = ["重载订阅", "刷新订阅", "reloaduid"]
 add_logo = ["设置立绘", "setlogo"]
 clear_logo = ["清除立绘", "clearlogo"]
 set_message = ["设置推送信息", "设置推送消息", "setmessage"]
-set_report = ["设置推送报告", "setreport"]
+set_report = ["设置直播报告", "设置推送报告", "setreport"]
 quit_group = ["退出群聊", "退群", "quit"]
 check_describe_abnormal = ["检测异常订阅", "checkabnormal"]
 clear_describe_abnormal = ["清除异常订阅", "clearabnormal"]
@@ -171,16 +171,19 @@ describe_cmd = {
     set_report[0]: {
         "cmd": set_report,
         "describe_group": [f"{prefix}[{' | '.join(set_report)}] uid configuration value",
+                           "可选参数：[-h | --help] 显示设置直播报告帮助，获取所有可配置参数及其可选值",
                            "设置直播报告参数，具体参数项可以根据推送姬网页配置项或者json字段设置",
                            "注意：uid需要在该群被订阅才能成功，为防止被滥用，该命令需要群管理员及以上权限可用",
                            f"示例: {prefix}{set_report[0]} 2 弹幕数据 关闭",
                            f"示例: {prefix}{set_report[0]} 2 盲盒榜 3"],
         "describe_friend": [f"{prefix}[{' | '.join(set_report)}] uid configuration value",
+                            "可选参数：[-h | --help] 显示设置直播报告帮助，获取所有可配置参数及其可选值",
                             "设置直播报告参数，具体参数项可以根据推送姬网页配置项或者json字段设置，uid需要被订阅才能成功",
                             f"示例: {prefix}{set_report[0]} 2 弹幕数据 关闭",
                             f"示例: {prefix}{set_report[0]} 2 盲盒榜 3"],
         "describe_admin": [f"{prefix}[{' | '.join(set_report)}] uid configuration value",
                            "可选参数：[-g | --group] [group_num] 订阅所在群号",
+                           "可选参数：[-h | --help] 显示设置直播报告帮助，获取所有可配置参数及其可选值",
                            "设置直播报告参数，具体参数项可以根据推送姬网页配置项或者json字段设置，uid需要被订阅才能成功",
                            f"示例: {prefix}{set_report[0]} 2 弹幕数据 关闭",
                            f"示例: {prefix}{set_report[0]} 2 盲盒榜 3 -g 123456"]
@@ -1075,6 +1078,75 @@ async def _SetMessageFriend(app: Ariadne, sender: Friend, cmd: MessageChain = Re
         uname, _ = obj_mysql.get_target_uname_and_roomid()
         logger.info(f"{logger_prefix} 成功 {msg_prefix}[{uname}]({uid})")
         await app.send_message(sender, MessageChain(draw_pic(f"{msg_prefix}{uname}(UID:{uid}){cmd.display}成功")))
+
+
+@channel.use(
+    ListenerSchema(
+        listening_events=[GroupMessage],
+        inline_dispatchers=[Twilight(
+            ElementMatch(At, optional=True),
+            FullMatch(prefix),
+            "cmd" @ UnionMatch(*set_report),
+            "cmd_help" @ ArgumentMatch("-h", "--help", action="store_true", default=False),
+            WildcardMatch()
+        )],
+        priority=12
+    )
+)
+async def _SetReportHelpGroup(app: Ariadne, sender: Group, message: MessageChain,
+                              cmd: MessageChain = ResultValue(), cmd_help: bool = ResultValue()):
+    if check_not_mysql_datasource():
+        return
+    if check_at_object(app.account, message) is False:
+        return
+    logger_prefix = get_logger_prefix(cmd.display, sender)
+    if cmd_help:
+        logger.info(f"{logger_prefix} 帮助")
+        help_str = [
+            f"用法示例：{prefix}{cmd.display} uid 配置项 值",
+            "注意：当前不支持批量配置",
+            f"示例：{prefix}{cmd.display} 2 粉丝变动 开启",
+            f"示例：{prefix}{cmd.display} 2 礼物榜 10",
+            " "
+        ]
+        help_str = append_report_help(help_str)
+        await app.send_message(sender, MessageChain(draw_pic(help_str, title=f"{cmd.display} 帮助", width=700)))
+        raise PropagationCancelled
+
+
+@channel.use(
+    ListenerSchema(
+        listening_events=[FriendMessage],
+        inline_dispatchers=[Twilight(
+            FullMatch(prefix),
+            "cmd" @ UnionMatch(*set_report),
+            "cmd_help" @ ArgumentMatch("-h", "--help", action="store_true", default=False),
+            WildcardMatch()
+        )],
+        priority=12
+    )
+)
+async def _SetReportHelpFriend(app: Ariadne, sender: Friend, cmd: MessageChain = ResultValue(),
+                               cmd_help: bool = ResultValue()):
+    if check_not_mysql_datasource():
+        return
+    logger_prefix = get_logger_prefix(cmd.display, sender)
+    if cmd_help:
+        logger.info(f"{logger_prefix} 帮助")
+        help_str = []
+        if master_qq == sender.id:
+            help_str.append(f"用法：{prefix}{cmd.display} (-g 群号) uid 配置项 值")
+        else:
+            help_str.append(f"用法：{prefix}{cmd.display} uid 配置项 值")
+        help_str.append("注意：当前不支持批量配置")
+        help_str.append(f"示例：{prefix}{cmd.display} 2 粉丝变动 开启")
+        help_str.append(f"示例：{prefix}{cmd.display} 2 礼物榜 10")
+        if master_qq == sender.id:
+            help_str.append(f"示例：{prefix}{cmd.display} -g 123456789 2 sc榜 3")
+        help_str.append(" ")
+        help_str = append_report_help(help_str)
+        await app.send_message(sender, MessageChain(draw_pic(help_str, title=f"{cmd.display} 帮助", width=700)))
+        raise PropagationCancelled
 
 
 @channel.use(
