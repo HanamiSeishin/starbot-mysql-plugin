@@ -1482,7 +1482,7 @@ async def _MysqlHelp(app: Ariadne, sender: Union[Friend, Group], message: Messag
                 "context": value.get(context_type)
             }
             pic_context.append(cmd_inner)
-    image = draw_pic(pic_context, cmd.display, help_cmd_sub_title, width=1500)
+    image = draw_pic(pic_context, cmd.display, help_cmd_sub_title, width=1600)
     await app.send_message(sender, MessageChain(image))
     # 拦截默认解析
     raise PropagationCancelled
