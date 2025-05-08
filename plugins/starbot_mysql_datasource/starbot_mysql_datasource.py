@@ -1072,7 +1072,7 @@ async def _SetMessageFriend(app: Ariadne, sender: Friend, cmd: MessageChain = Re
                 msg += "{base64pic=" + await element_get_bytes(element) + "}"
             if isinstance(element, Plain):
                 msg += element.text
-        await obj_mysql.init_target(bot, uid, group)
+        await obj_mysql.init_target(bot, uid, source, source_type)
         obj_mysql.set_message_inner(message_type, msg)
         await obj_mysql.save()
         uname, _ = obj_mysql.get_target_uname_and_roomid()
@@ -1482,7 +1482,7 @@ async def _MysqlHelp(app: Ariadne, sender: Union[Friend, Group], message: Messag
                 "context": value.get(context_type)
             }
             pic_context.append(cmd_inner)
-    image = draw_pic(pic_context, cmd.display, help_cmd_sub_title, width=1600)
+    image = draw_pic(pic_context, cmd.display, help_cmd_sub_title, width=1700)
     await app.send_message(sender, MessageChain(image))
     # 拦截默认解析
     raise PropagationCancelled
