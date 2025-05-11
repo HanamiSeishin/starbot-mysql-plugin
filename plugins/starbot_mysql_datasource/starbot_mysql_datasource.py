@@ -156,7 +156,7 @@ describe_cmd = {
         "cmd": set_message,
         "describe_group": [f"{prefix}[{' | '.join(set_message)}] uid",
                            "必选参数：[-t | --type] [news | live_on | live_off]  类型[动态提醒，开播提醒，下播提醒]",
-                           "设置动态提醒，开播提醒和下播提醒，uid需要在该群被订阅才能成功，为防止被滥用，该命令需要群管理员及以上权限可用",
+                           "设置动态提醒、开播提醒或下播提醒，uid需要在该群被订阅才能成功，需要管理员或群主权限",
                            f"示例: {prefix}{set_message[0]} 2 -t live_on"],
         "describe_friend": [f"{prefix}[{' | '.join(set_message)}] uid",
                             "必选参数：[-t | --type] [news | live_on | live_off]  类型[动态提醒，开播提醒，下播提醒]",
