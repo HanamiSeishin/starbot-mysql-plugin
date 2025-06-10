@@ -113,6 +113,7 @@ logo绘图函数：mysql_utils.py -> draw_image_pic
 
 | 配置项      | 别名                 | 类型   | 可选值     |
 |----------|--------------------|------|---------|
+| 直播报告     | report             | bool | 开启 关闭   |
 | 直播时长     | time               | bool | 开启 关闭   |
 | 粉丝变动     | fans_change        | bool | 开启 关闭   |
 | 粉丝勋章变动   | fans_medal_change  | bool | 开启 关闭   |

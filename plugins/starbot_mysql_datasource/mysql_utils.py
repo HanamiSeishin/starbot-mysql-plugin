@@ -22,7 +22,7 @@ from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.5"
+_version = "v1.1.6"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -386,6 +386,7 @@ async def element_get_bytes(image: Image):
 def append_report_help(help_str):
     help_str.append("详细配置项如下")
     help_str.append("*配置项*             *可选值*")
+    help_str.append("直播报告             开启 关闭")
     help_str.append("直播时长             开启 关闭")
     help_str.append("粉丝变动             开启 关闭")
     help_str.append("粉丝勋章变动          开启 关闭")
@@ -815,6 +816,8 @@ class ReportMysql:
             input_type = None
             return False
         conf_dict = {
+            "report": lambda v=value: (setattr(self, 'enabled', v) or True) if input_type is bool else False,
+            "直播报告": lambda v=value: (setattr(self, 'enabled', v) or True) if input_type is bool else False,
             "time": lambda v=value: (setattr(self, 'time', v) or True) if input_type is bool else False,
             "直播时长": lambda v=value: (setattr(self, 'time', v) or True) if input_type is bool else False,
             "fans_change": lambda v=value: (setattr(self, 'fans_change', v) or True) if input_type is bool else False,
