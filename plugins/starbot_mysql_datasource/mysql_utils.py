@@ -17,12 +17,12 @@ from starbot.core.model import PushType
 from starbot.utils import config, redis
 from starbot.utils.network import request, get_session
 from starbot.utils.utils import get_credential
-from starbot.exception import ResponseCodeException, DataSourceException
+from starbot.exception import ResponseCodeException, DataSourceException, LiveException
 from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.6"
+_version = "v1.1.7"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -1025,7 +1025,10 @@ class ObjMysql:
             up.uname, _ = self.target.get_uname_and_room_id()
         else:
             up.uname, _ = await select_uname_and_room_id(uid)
-        await self.datasource.reload_targets(up)
+        try:
+            await self.datasource.reload_targets(up)
+        except LiveException as e:
+            logger.error(e.msg)
 
     async def remove_up(self, uid):
         up = self.get_up_by_uid(uid)
