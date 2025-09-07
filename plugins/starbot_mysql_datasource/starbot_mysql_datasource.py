@@ -17,6 +17,7 @@ from loguru import logger
 
 from starbot.utils import config
 from starbot.core.model import PushType
+from starbot.core.bot import StarBot
 
 from .mysql_utils import ObjMysql, check_not_mysql_datasource, check_mysql_datasource, create_auto_follow_task, \
     draw_image_pic, draw_pic, check_at_object, get_message_help, select_uname_and_room_id, get_logger_prefix, \
@@ -44,6 +45,7 @@ clear_describe_abnormal = ["清除异常订阅", "clearabnormal"]
 trans_to_mysql = ["数据源转储", "datasourcetrans"]
 save_json = ["数据源转存json"]
 ping = ["ping"]
+get_status = ["status"]
 bot_mode = ["模式", "mode"]
 
 help_cmd = ["订阅帮助", "帮助", "菜单", "功能", "命令", "指令", "help"]
@@ -238,6 +240,14 @@ describe_cmd = {
         "describe_admin": [f"{prefix}[{' | '.join(ping)}]" if len(ping) > 1 else f"{prefix}{ping[0]}",
                            "回复 pong",
                            f"示例: {prefix}{ping[0]}"]
+    },
+    get_status[0]: {
+        "cmd": get_status,
+        "describe_group": [],
+        "describe_friend": [],
+        "describe_admin": [f"{prefix}[{' | '.join(get_status)}]" if len(get_status) > 1 else f"{prefix}{get_status[0]}",
+                           "展示当前starbot版本",
+                           f"示例: {prefix}{get_status[0]}"]
     },
     bot_mode[0]: {
         "cmd": bot_mode,
@@ -1503,6 +1513,47 @@ async def _Ping(app: Ariadne, sender: Friend, cmd: MessageChain = ResultValue())
     logger_prefix = get_logger_prefix(cmd.display, sender)
     logger.info(f"{logger_prefix}")
     await app.send_message(sender, MessageChain("pong"))
+
+
+@channel.use(
+    ListenerSchema(
+        listening_events=[GroupMessage],
+        inline_dispatchers=[Twilight(
+            ElementMatch(At, optional=True),
+            FullMatch(prefix),
+            "cmd" @ UnionMatch(*get_status)
+        )],
+    )
+)
+async def _GetStatusGroup(app: Ariadne, sender: Group, member: Member, message: MessageChain,
+                          cmd: MessageChain = ResultValue()):
+    if check_at_object(app.account, message) is False:
+        return
+    logger_prefix = get_logger_prefix(cmd.display, sender, member)
+    logger.info(f"{logger_prefix}")
+    status_result = "Running on StarBot v" + StarBot.VERSION
+
+    await app.send_message(sender, MessageChain(status_result), quote=message)
+    logger.info(f"{logger_prefix} {status_result}")
+
+
+@channel.use(
+    ListenerSchema(
+        listening_events=[FriendMessage],
+        inline_dispatchers=[Twilight(
+            FullMatch(prefix),
+            "cmd" @ UnionMatch(*get_status)
+        )],
+    )
+)
+async def _GetStatusPrivate(app: Ariadne, sender: Friend, cmd: MessageChain = ResultValue()):
+    if master_qq == "" or master_qq != sender.id:
+        return
+    logger_prefix = get_logger_prefix(cmd.display, sender)
+    logger.info(f"{logger_prefix}")
+    status_result = "Running on StarBot v" + StarBot.VERSION
+    await app.send_message(sender, MessageChain(status_result))
+    logger.info(f"{logger_prefix} {status_result}")
 
 
 @channel.use(

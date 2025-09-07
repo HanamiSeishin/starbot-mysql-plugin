@@ -22,7 +22,7 @@ from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.7"
+_version = "v1.1.8"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -1260,8 +1260,8 @@ class ObjMysql:
         self.live_on = LiveOnMysql(uid)
         self.live_off = LiveOffMysql(uid)
         self.report = ReportMysql(uid)
-        await self.target.set_uname_and_room_id()
         await self.query_targets()
+        await self.target.set_uname_and_room_id()
 
     async def trans_targets(self, bot, uid, num, target):
         dynamic = target.get("dynamic_update")
