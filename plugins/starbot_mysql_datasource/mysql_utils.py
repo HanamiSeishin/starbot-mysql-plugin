@@ -77,12 +77,12 @@ async def select_uname_and_room_id(uid):
     room_id = user_info["room_id"]
     if user_info["room_id"] == 0:
         logger.warning(f"UP主{uname}(UID:{uid})还未开通直播间")
-    else:
-        # 特殊处理存在short_id的直播间
-        room_info_url = f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={room_id}"
-        room_info = await request("GET", room_info_url)
-        if room_info and room_info["short_id"] > 0:
-            room_id = room_info["short_id"]
+    #else:
+    #    # 特殊处理存在short_id的直播间
+    #    room_info_url = f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={room_id}"
+    #    room_info = await request("GET", room_info_url)
+    #    if room_info and room_info["short_id"] > 0:
+    #        room_id = room_info["short_id"]
     return uname, room_id
 
 
