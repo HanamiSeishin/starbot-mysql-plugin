@@ -22,7 +22,7 @@ from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.8"
+_version = "v1.1.9"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -77,6 +77,12 @@ async def select_uname_and_room_id(uid):
     room_id = user_info["room_id"]
     if user_info["room_id"] == 0:
         logger.warning(f"UP主{uname}(UID:{uid})还未开通直播间")
+    else:
+        # 需要特殊处理存在short_id的直播间，有short_id应当使用short_id
+        room_info_url = f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={room_id}"
+        room_info = await request("GET", room_info_url)
+        if room_info and room_info["data"] and room_info["data"]["short_id"] > 0:
+            room_id = room_info["data"]["short_id"]
     return uname, room_id
 
 
@@ -430,8 +436,8 @@ class BotMysql:
     def get_uid(self) -> int:
         return self.uid
 
-    def set_id(self, id: int):
-        self.id = id
+    def set_id(self, target_id: int):
+        self.id = target_id
 
     def mysql_insert_query(self) -> str:
         return f"INSERT INTO `{self.mysql_name}` (`bot`, `uid`) VALUES ({self.bot}, {self.uid})"
@@ -466,8 +472,8 @@ class DynamicMysql:
         self.enabled = args.get("enabled")
         self.message = args.get("message")
 
-    def set_id(self, id: str):
-        self.id = id
+    def set_id(self, target_id: str):
+        self.id = target_id
 
     def set_uid(self, uid: int):
         self.uid = uid
@@ -499,17 +505,18 @@ class DynamicMysql:
     def mysql_update_query(self) -> str:
         return f"UPDATE `{self.mysql_name}` SET `uid` = {self.uid}, `enabled` = {int(self.enabled)}, `message` = '{self.message}' WHERE `id` = '{self.id}'"
 
-    def mysql_get_by_id_query(self, id="") -> str:
-        if id == "":
-            id = self.id
-        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{id}'"
+    def mysql_get_by_id_query(self, target_id="") -> str:
+        if target_id == "":
+            target_id = self.id
+        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{target_id}'"
 
 
-class LiveOffMysql():
+class LiveOffMysql:
     id: str = ""
     uid: int = 0
     enabled: bool = False
     message: str = "{uname} 直播结束了"
+    _message_default: str = "{uname} 直播结束了"
 
     mysql_name = "live_off"
 
@@ -526,8 +533,8 @@ class LiveOffMysql():
         self.enabled = args.get("enabled")
         self.message = args.get("message")
 
-    def set_id(self, id: str):
-        self.id = id
+    def set_id(self, target_id: str):
+        self.id = target_id
 
     def set_uid(self, uid: int):
         self.uid = uid
@@ -553,10 +560,10 @@ class LiveOffMysql():
     def mysql_update_query(self) -> str:
         return f"UPDATE `{self.mysql_name}` SET `uid` = {self.uid}, `enabled` = {int(self.enabled)}, `message` = '{self.message}' WHERE `id` = '{self.id}'"
 
-    def mysql_get_by_id_query(self, id="") -> str:
-        if id == "":
-            id = self.id
-        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{id}'"
+    def mysql_get_by_id_query(self, target_id="") -> str:
+        if target_id == "":
+            target_id = self.id
+        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{target_id}'"
 
 
 class LiveOnMysql:
@@ -582,8 +589,8 @@ class LiveOnMysql:
         self.enabled = args.get("enabled")
         self.message = args.get("message")
 
-    def set_id(self, id: str):
-        self.id = id
+    def set_id(self, target_id: str):
+        self.id = target_id
 
     def set_uid(self, uid: int):
         self.uid = uid
@@ -615,10 +622,10 @@ class LiveOnMysql:
     def mysql_update_query(self) -> str:
         return f"UPDATE `{self.mysql_name}` SET `uid` = {self.uid}, `enabled` = {int(self.enabled)}, `message` = '{self.message}' WHERE `id` = '{self.id}'"
 
-    def mysql_get_by_id_query(self, id="") -> str:
-        if id == "":
-            id = self.id
-        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{id}'"
+    def mysql_get_by_id_query(self, target_id="") -> str:
+        if target_id == "":
+            target_id = self.id
+        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{target_id}'"
 
 
 class ReportMysql:
@@ -909,10 +916,10 @@ class ReportMysql:
             f"`box_diagram` = {int(self.box_diagram)}, `gift_diagram` = {int(self.gift_diagram)}, `sc_diagram` = {int(self.sc_diagram)}, `guard_diagram` = {int(self.guard_diagram)}, "
             f"`danmu_cloud` = {int(self.danmu_cloud)} WHERE `id` = '{self.id}'")
 
-    def mysql_get_by_id_query(self, id="") -> str:
-        if id == "":
-            id = self.id
-        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{id}'"
+    def mysql_get_by_id_query(self, target_id="") -> str:
+        if target_id == "":
+            target_id = self.id
+        return f"SELECT * FROM `{self.mysql_name}` WHERE `id` = '{target_id}'"
 
 
 class TargetMysql:
@@ -945,8 +952,8 @@ class TargetMysql:
         self.num = args.get("id")
         self.type = PushType(args.get("type"))
 
-    def set_id(self, id: str):
-        self.id = id
+    def set_id(self, target_id: str):
+        self.id = target_id
 
     def set_uid(self, uid: int):
         self.uid = uid
@@ -1232,24 +1239,24 @@ class ObjMysql:
     async def query_targets(self):
         target = await self.query(self.target.mysql_get_by_uid_and_num_query())
         if len(target) > 0:
-            id = target[0].get("id")
+            target_id = target[0].get("id")
             self.target.dict_init(**target[0])
-            dynamic = await self.query(self.dynamic.mysql_get_by_id_query(id))
-            live_on = await self.query(self.live_on.mysql_get_by_id_query(id))
-            live_off = await self.query(self.live_off.mysql_get_by_id_query(id))
-            report = await self.query(self.report.mysql_get_by_id_query(id))
+            dynamic = await self.query(self.dynamic.mysql_get_by_id_query(target_id))
+            live_on = await self.query(self.live_on.mysql_get_by_id_query(target_id))
+            live_off = await self.query(self.live_off.mysql_get_by_id_query(target_id))
+            report = await self.query(self.report.mysql_get_by_id_query(target_id))
             self.dynamic.dict_init(**dynamic[0])
             self.live_on.dict_init(**live_on[0])
             self.live_off.dict_init(**live_off[0])
             self.report.dict_init(**report[0])
         else:
-            id = uuid.uuid1()
+            target_id = uuid.uuid1()
             self.target_create_flag = True
-            self.target.set_id(id)
-            self.dynamic.set_id(id)
-            self.live_on.set_id(id)
-            self.live_off.set_id(id)
-            self.report.set_id(id)
+            self.target.set_id(target_id)
+            self.dynamic.set_id(target_id)
+            self.live_on.set_id(target_id)
+            self.live_off.set_id(target_id)
+            self.report.set_id(target_id)
 
     async def init_target(self, bot: int, uid: int, num: int, type: PushType = PushType.Group):
         await self.connect()
@@ -1277,31 +1284,31 @@ class ObjMysql:
         self.live_on = LiveOnMysql(uid)
         self.live_off = LiveOffMysql(uid)
         self.report = ReportMysql(uid)
-        await self.target.set_uname_and_room_id()
         target_mysql = await self.query(self.target.mysql_get_by_uid_and_num_query())
         if len(target_mysql) > 0:
-            id = target_mysql[0].get("id")
+            target_id = target_mysql[0].get("id")
         else:
-            id = uuid.uuid1()  # 使用uuid1确保表主键不重复
+            target_id = uuid.uuid1()  # 使用uuid1确保表主键不重复
             self.target_create_flag = True
         self.target.dict_trans(**target)
-        self.target.set_id(id)
+        self.target.set_id(target_id)
         self.target.set_uid(uid)
         self.dynamic.dict_trans(**dynamic)
-        self.dynamic.set_id(id)
+        self.dynamic.set_id(target_id)
         self.dynamic.set_uid(uid)
         self.live_on.dict_trans(**live_on)
-        self.live_on.set_id(id)
+        self.live_on.set_id(target_id)
         self.live_on.set_uid(uid)
         self.live_off.dict_trans(**live_off)
-        self.live_off.set_id(id)
+        self.live_off.set_id(target_id)
         self.live_off.set_uid(uid)
         self.report.dict_trans(**report)
-        self.report.set_id(id)
+        self.report.set_id(target_id)
         self.report.set_uid(uid)
+        await self.target.set_uname_and_room_id()
 
-    async def check_uid_exist(self, uid: int, num: int, type: PushType = PushType.Group):
-        target = TargetMysql(uid, num, type)
+    async def check_uid_exist(self, uid: int, num: int, push_type: PushType = PushType.Group):
+        target = TargetMysql(uid, num, push_type)
         target_mysql = await self.query(target.mysql_get_by_uid_and_num_query())
         if len(target_mysql) == 0:
             return False
@@ -1325,7 +1332,7 @@ class ObjMysql:
         uid: int = self.get_target_uid()
         if self.bot.get_id() == 0:
             self.sql_str.append(self.bot.mysql_insert_query())
-        if self.target_create_flag is True:
+        if self.target_create_flag:
             self.sql_str.append(self.target.mysql_insert_query())
             self.sql_str.append(self.dynamic.mysql_insert_query())
             self.sql_str.append(self.live_on.mysql_insert_query())
@@ -1345,7 +1352,7 @@ class ObjMysql:
     async def trans_save(self):
         if self.bot.get_id() == 0:
             self.sql_str.append(self.bot.mysql_insert_query())
-        if self.target_create_flag is True:
+        if self.target_create_flag:
             self.sql_str.append(self.target.mysql_insert_query())
             self.sql_str.append(self.dynamic.mysql_insert_query())
             self.sql_str.append(self.live_on.mysql_insert_query())

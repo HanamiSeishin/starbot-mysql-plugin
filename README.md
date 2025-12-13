@@ -2,6 +2,8 @@
 ![1f36b87beb59d8b49881204b497ee87b](https://github.com/user-attachments/assets/580c0838-45b7-4cba-9217-1a61ef77ab47)
 #### 介绍
 
+_[该插件仅可用于starbot2.x.x版本，starbot3.0正式版发布后，该仓库将同步进入维护状态，不再更新]_ 
+
 starbot自定义命令包，包含如下功能
 
 1. 递归加载plugins下的所有文件，报错则打印日志并跳过
@@ -10,7 +12,7 @@ starbot自定义命令包，包含如下功能
 4. mysql数据源下的机器人的动态订阅功能和当前内存数据源到mysql的转储能力（需要配置MASTER_QQ）
 5. 覆盖starbot原始帮助
 
-当前版本 v1.1.8
+当前版本 v1.1.9
 
 starbot-mysql-plugin配套mysql工具脚本：
 
