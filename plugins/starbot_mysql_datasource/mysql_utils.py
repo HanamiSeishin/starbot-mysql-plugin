@@ -22,7 +22,7 @@ from starbot.painter.PicGenerator import PicGenerator, Color
 
 from loguru import logger
 
-_version = "v1.1.9"
+_version = "v1.2.0"
 
 master_qq = config.get("MASTER_QQ")
 prefix = config.get("COMMAND_PREFIX")
@@ -128,16 +128,28 @@ def create_auto_follow_task():
                 return
 
             logger.info(f"检测到 {len(need_follow_uids)} 个打开了动态推送但未关注的 UP 主, 启动自动关注任务")
+            follow_success_num = 0
             for i, u in enumerate(need_follow_uids):
                 follow_user = User(u, get_credential())
-                await follow_user.modify_relation(RelationType.SUBSCRIBE)
-                logger.success(f"已关注: {i + 1} / {len(need_follow_uids)}")
+                try:
+                    await follow_user.modify_relation(RelationType.SUBSCRIBE)
+                except ResponseCodeException as e:
+                    if e.code == 22002: # 错误信息：因对方隐私设置，你还不能关注 可能被拉黑
+                        logger.error(f"关注 UP 主(uid:{u})失败, 错误信息:{e.msg}")
+                        continue
+                    else:
+                        logger.error(f"关注 UP 主(uid:{u})失败")
+                        raise e
+                follow_success_num += 1
+                logger.success(f"已关注 UP 主(uid:{u})")
                 if i + 1 < len(need_follow_uids):
                     await asyncio.sleep(10)
-            logger.success(f"已成功关注了 {len(need_follow_uids)} 个 UP 主")
+            logger.success(f"完成自动关注任务,成功关注了 {follow_success_num} 个 UP 主")
         except ResponseCodeException as e:
             if e.code == 22115 or e.code == 22007:
                 logger.warning(f"读取登录账号的关注列表失败, 请检查登录凭据是否已失效, 错误信息: {e.msg}")
+            else:
+                logger.error(f"自动关注任务异常, 错误代码:{e.code}, 错误信息:{e.msg}")
         except Exception as e:
             logger.exception(f"自动关注任务异常", e)
 
