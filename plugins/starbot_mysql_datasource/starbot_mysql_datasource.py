@@ -40,6 +40,7 @@ clear_logo = ["清除立绘", "clearlogo"]
 set_message = ["设置推送信息", "设置推送消息", "setmessage"]
 set_report = ["设置直播报告", "设置推送报告", "setreport"]
 quit_group = ["退出群聊", "退群", "quit"]
+del_friend = ["删除好友", "delfriend"]
 check_describe_abnormal = ["检测异常订阅", "checkabnormal"]
 clear_describe_abnormal = ["清除异常订阅", "clearabnormal"]
 trans_to_mysql = ["数据源转储", "datasourcetrans"]
@@ -199,6 +200,14 @@ describe_cmd = {
         "describe_admin": [f"{prefix}[{' | '.join(quit_group)}] group_num",
                            "bot退出指定群聊并清除订阅内容",
                            f"示例: {prefix}{quit_group[0]} 123456"]
+    },
+    del_friend[0]: {
+        "cmd": del_friend,
+        "describe_group": [],
+        "describe_friend": [],
+        "describe_admin": [f"{prefix}[{' | '.join(del_friend)}] qq_num",
+                           "bot删除指定好友并清除订阅内容",
+                           f"示例: {prefix}{del_friend[0]} 123456"]
     },
     check_describe_abnormal[0]: {
         "cmd": check_describe_abnormal,
@@ -422,7 +431,7 @@ async def _DelListenGroup(app: Ariadne, sender: Group, member: Member, message: 
     await obj_mysql.init_target(bot, uid, group)
     await obj_mysql.delete()
     uname, _ = obj_mysql.get_target_uname_and_roomid()
-    logger.info(f"{logger_prefix} 成功{uname}({uid})")
+    logger.info(f"{logger_prefix} 成功 {uname}({uid})")
     await app.send_message(sender, MessageChain(draw_pic(f"{uname}(UID:{uid}){cmd.display}成功", width=800)))
 
 
@@ -1347,6 +1356,43 @@ async def _QuitGroupPrivate(app: Ariadne, sender: Friend, group_num: MessageChai
     bot = app.account
     obj_mysql = ObjMysql()
     await obj_mysql.clean_describe(bot, group_num, PushType.Group)
+    logger.info(f"{logger_prefix} 成功")
+    await app.send_message(sender, MessageChain(draw_pic(f"{cmd.display}成功", width=800)))
+
+
+@channel.use(
+    ListenerSchema(
+        listening_events=[FriendMessage],
+        inline_dispatchers=[Twilight(
+            FullMatch(prefix),
+            "cmd" @ UnionMatch(*del_friend).space(SpacePolicy.FORCE),
+            "qq_num" @ ParamMatch()
+        )],
+    )
+)
+async def _DelFrindPrivate(app: Ariadne, sender: Friend, qq_num: MessageChain = ResultValue(),
+                            cmd: MessageChain = ResultValue()):
+    if check_not_mysql_datasource():
+        return
+    if master_qq == "" or master_qq != sender.id:
+        # 功能需要配置MASTER_QQ
+        return
+    qq_num = qq_num.display
+    logger_prefix = get_logger_prefix(cmd.display, sender)
+    if qq_num == "" or not qq_num.isdigit():
+        logger.info(f"{logger_prefix} qq_num输入不合法({qq_num})")
+        await app.send_message(sender, MessageChain(draw_pic(f"qq_num输入不合法({qq_num})，操作失败", width=800)))
+        return
+    qq_num = int(qq_num)
+    logger.info(f"{logger_prefix} ({qq_num = })")
+    friend_check = await app.get_friend(qq_num)
+    if friend_check is None:
+        logger.warning(f"{logger_prefix} bot未查询到好友({qq_num})")
+    else:
+        await app.delete_friend(qq_num)
+    bot = app.account
+    obj_mysql = ObjMysql()
+    await obj_mysql.clean_describe(bot, qq_num, PushType.Friend)
     logger.info(f"{logger_prefix} 成功")
     await app.send_message(sender, MessageChain(draw_pic(f"{cmd.display}成功", width=800)))
 
